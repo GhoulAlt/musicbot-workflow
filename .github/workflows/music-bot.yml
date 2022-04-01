@@ -1,0 +1,51 @@
+name: Music Bot
+on:
+  push:
+    branches: [ main ]
+  
+  workflow_dispatch:
+
+env:
+  GitHubMail: "theprajjjus@gmail.com "
+  GitHubName: "PrajjuS" 
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+       - name: Checkout
+         uses: actions/checkout@main
+
+       - name: Set Git Configs
+         run: |
+           git config --global user.email ${GitHubMail}
+           git config --global user.name ${GitHubName}
+
+       - name: Clone Repo
+         continue-on-error: false
+         run: |
+           git clone https://${GitHubName}:${{ secrets.GH_TOKEN_MAIN }}@github.com/${{ secrets.REPO }} -b mod source
+
+       - name: Build Docker
+         timeout-minutes: 300
+         continue-on-error: false
+         run: |
+           cd source
+           docker build . --rm --force-rm --compress --no-cache=true --pull --file Dockerfile -t music-bot:latest
+
+       - name: Run Bot
+         timeout-minutes: 300
+         continue-on-error: false
+         run: |
+           cd source
+           docker run --privileged --rm -i music-bot:latest
+
+       - name: Loop workflow
+         continue-on-error: false
+         run: |
+           git clone https://${{ secrets.GH_TOKEN_LOOP }}@github.com/${GITHUB_REPOSITORY} loop
+           cd loop || exit 1
+           echo $(( RANDOM - ( RANDOM % RANDOM ) )) > looper.txt
+           git add looper.txt
+           git commit -m "Workflow : Loop at $(date -u +%D-%T%P)"
+           git push -q https://${{ secrets.GH_TOKEN_LOOP }}@github.com/${GITHUB_REPOSITORY} HEAD:main
