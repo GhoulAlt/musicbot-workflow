@@ -35,7 +35,7 @@ jobs:
 
        - name: Run Bot
          timeout-minutes: 300
-         continue-on-error: false
+         continue-on-error: true
          run: |
            cd source
            docker run --privileged --rm -i music-bot:latest
